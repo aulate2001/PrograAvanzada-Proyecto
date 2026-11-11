@@ -1,1 +1,707 @@
-@* Vista Create de pedidos *@
+@using System.Globalization
+@model PedidoCreateViewModel
+@{
+    ViewData["Title"] = "Crear pedido";
+}
+
+<style>
+    .pedido-create-page {
+        --pedido-green: #2d806f;
+        --pedido-ink: #202b42;
+        --pedido-muted: #7c879a;
+        --pedido-border: #e7ebf1;
+        background: #f5f7fa;
+        border-radius: 14px;
+        color: var(--pedido-ink);
+        margin: -0.5rem -0.75rem;
+        padding: 1.5rem;
+    }
+
+    .pedido-create-page .breadcrumb {
+        color: var(--pedido-muted);
+    }
+
+    .pedido-create-page .card {
+        border: 1px solid var(--pedido-border) !important;
+        border-radius: 13px;
+    }
+
+    .pedido-create-page .card-body {
+        padding: 1.5rem;
+    }
+
+    .pedido-step-number {
+        color: var(--pedido-green);
+        font-size: .75rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        padding-top: .2rem;
+    }
+
+    .pedido-create-page .form-control,
+    .pedido-create-page .form-select {
+        border-color: var(--pedido-border);
+        min-height: 42px;
+    }
+
+    .pedido-create-page .form-control:focus,
+    .pedido-create-page .form-select:focus {
+        border-color: var(--pedido-green);
+        box-shadow: 0 0 0 .2rem rgb(45 128 111 / 12%);
+    }
+
+    .pedido-search-results {
+        background: #fff;
+        border: 1px solid var(--pedido-border);
+        border-radius: 10px;
+        box-shadow: 0 12px 30px rgb(32 43 66 / 10%);
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .pedido-search-results[hidden] {
+        display: none;
+    }
+
+    .pedido-search-result {
+        align-items: center;
+        background: #fff;
+        border: 0;
+        border-bottom: 1px solid var(--pedido-border);
+        color: var(--pedido-ink);
+        display: flex;
+        gap: .75rem;
+        justify-content: space-between;
+        padding: .8rem 1rem;
+        text-align: left;
+        width: 100%;
+    }
+
+    .pedido-search-result:last-child {
+        border-bottom: 0;
+    }
+
+    .pedido-search-result:hover,
+    .pedido-search-result:focus-visible {
+        background: #f2f8f6;
+        outline: 0;
+    }
+
+    .pedido-product-avatar {
+        align-items: center;
+        background: #e8f4f0;
+        border-radius: 50%;
+        color: var(--pedido-green);
+        display: inline-flex;
+        flex: 0 0 38px;
+        font-size: .85rem;
+        font-weight: 750;
+        height: 38px;
+        justify-content: center;
+        width: 38px;
+    }
+
+    .linea-pedido {
+        background: #fff;
+        border-color: var(--pedido-border) !important;
+        border-radius: 10px;
+    }
+
+    .linea-pedido .producto-resumen {
+        align-items: center;
+        display: flex;
+        gap: .65rem;
+        min-height: 42px;
+    }
+
+    .pedido-summary {
+        border-top: 3px solid var(--pedido-green) !important;
+    }
+
+    .pedido-summary .total-pedido {
+        color: var(--pedido-green);
+    }
+
+    .pedido-create-page .btn-success {
+        background: var(--pedido-green);
+        border-color: var(--pedido-green);
+    }
+
+    @@media (max-width: 575.98px) {
+        .pedido-create-page {
+            margin: -0.5rem -0.75rem;
+            padding: 1rem;
+        }
+
+        .pedido-create-page .card-body {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="pedido-create-page">
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item">Ventas</li>
+        <li class="breadcrumb-item">Pedidos</li>
+        <li class="breadcrumb-item active" aria-current="page">Nuevo</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h1 class="h2 mb-1">Crear pedido</h1>
+        <p class="text-muted mb-0">Selecciona un cliente y agrega los productos solicitados.</p>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" id="pedido-form" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-8">
+            <section class="card shadow-sm mb-4" aria-labelledby="cliente-titulo">
+                <div class="card-body p-4">
+                    <div class="d-flex gap-3">
+                        <span class="pedido-step-number">01</span>
+                        <div class="flex-grow-1">
+                            <h2 class="h5 mb-1" id="cliente-titulo">Cliente</h2>
+                            <p class="text-muted small mb-3">¿Para quién estamos preparando este pedido?</p>
+                            <label asp-for="ClienteId" class="form-label small fw-semibold">Buscar cliente por nombre o identificación</label>
+                            <div class="row g-2">
+                                <div class="col-md-7">
+                            <select asp-for="ClienteId" asp-items="Model.Clientes" class="form-select">
+                                <option value="">Buscar o seleccionar un cliente...</option>
+                            </select>
+                            <span asp-validation-for="ClienteId" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-5">
+                                    <div id="cliente-seleccionado" class="alert alert-light border mb-0 py-2 small" role="status">
+                                        Selecciona un cliente para asociarlo al pedido.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card shadow-sm" aria-labelledby="productos-titulo">
+                <div class="card-body p-4">
+                    <div class="d-flex gap-3">
+                        <span class="pedido-step-number">02</span>
+                        <div class="flex-grow-1">
+                            <h2 class="h5 mb-1" id="productos-titulo">Productos del pedido</h2>
+                            <p class="text-muted small mb-3">Busca por nombre o código y agrega las unidades.</p>
+
+                            <div class="input-group mb-2">
+                                <span class="input-group-text bg-white" aria-hidden="true">⌕</span>
+                                <label for="buscar-producto" class="visually-hidden">Buscar producto por nombre o código</label>
+                                <input id="buscar-producto" type="search" class="form-control"
+                                       placeholder="Buscar producto por nombre o código..." autocomplete="off" />
+                                <button type="button" class="btn btn-success" id="buscar-agregar-producto">＋ Agregar</button>
+                            </div>
+                            <p class="form-text">Escribe al menos 2 caracteres para ver hasta 10 coincidencias.</p>
+                            <p id="resultado-busqueda" class="small text-muted" aria-live="polite"></p>
+                            <div id="resultados-productos" class="pedido-search-results" role="region"
+                                 aria-label="Resultados de búsqueda" hidden></div>
+
+                            @if (Model.Productos.Count == 0)
+                            {
+                                <div class="alert alert-warning small">
+                                    No hay productos activos disponibles. Carga los datos de prueba o agrega productos al catálogo.
+                                </div>
+                            }
+
+                            <div id="lineas-pedido">
+                                @for (var i = 0; i < Model.Lineas.Count; i++)
+                                {
+                                    <div class="linea-pedido border p-3 mb-3" data-index="@i">
+                                        <div class="row g-3 align-items-end">
+                                            <div class="col-12 col-lg-6">
+                                                <label asp-for="Lineas[i].ProductoId" class="form-label small fw-semibold"></label>
+                                                <select asp-for="Lineas[i].ProductoId" class="form-select selector-producto">
+                                                    <option value="0">Seleccione un producto...</option>
+                                                    @foreach (var producto in Model.Productos)
+                                                    {
+                                                        <option value="@producto.Id"
+                                                                data-search="@($"{producto.Nombre} {producto.Codigo}".ToLowerInvariant())"
+                                                                data-name="@producto.Nombre"
+                                                                data-code="@producto.Codigo"
+                                                                data-price="@producto.Precio.ToString(CultureInfo.InvariantCulture)"
+                                                                data-tax="@producto.ImpuestoPorc.ToString(CultureInfo.InvariantCulture)"
+                                                                data-stock="@producto.Stock">
+                                                            @producto.Nombre (@producto.Codigo) · ₡@producto.Precio.ToString("N2", CultureInfo.GetCultureInfo("es-CR")) · Stock: @producto.Stock
+                                                        </option>
+                                                    }
+                                                </select>
+                                                <span asp-validation-for="Lineas[i].ProductoId" class="text-danger small"></span>
+                                                <div class="producto-resumen mt-2">
+                                                    <span class="pedido-product-avatar producto-letra">P</span>
+                                                    <span class="small text-muted producto-detalle">
+                                                        <span class="producto-codigo"></span>
+                                                        <span class="d-block stock-disponible"></span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-lg-3">
+                                                <label class="form-label small fw-semibold">Precio unitario</label>
+                                                <div class="precio-unitario fw-semibold">₡0,00</div>
+                                            </div>
+                                            <div class="col-6 col-lg-3">
+                                                <label asp-for="Lineas[i].Cantidad" class="form-label small fw-semibold"></label>
+                                                <div class="input-group">
+                                                    <button type="button" class="btn btn-outline-secondary cantidad-ajustar"
+                                                            data-cambio="-1" aria-label="Restar una unidad">−</button>
+                                                    <input asp-for="Lineas[i].Cantidad" class="form-control cantidad-linea text-center" min="1" />
+                                                    <button type="button" class="btn btn-outline-secondary cantidad-ajustar"
+                                                            data-cambio="1" aria-label="Agregar una unidad">＋</button>
+                                                </div>
+                                                <span asp-validation-for="Lineas[i].Cantidad" class="text-danger small"></span>
+                                            </div>
+                                            <div class="col-12 col-lg-4">
+                                                <label asp-for="Lineas[i].TipoDescuento" class="form-label small fw-semibold"></label>
+                                                <select asp-for="Lineas[i].TipoDescuento"
+                                                        asp-items="Html.GetEnumSelectList<TipoDescuento>()"
+                                                        class="form-select tipo-descuento"></select>
+                                            </div>
+                                            <div class="col-8 col-lg-4">
+                                                <label asp-for="Lineas[i].Descuento" class="form-label small fw-semibold"></label>
+                                                <input asp-for="Lineas[i].Descuento" class="form-control descuento-linea" min="0" step="0.01" />
+                                                <span asp-validation-for="Lineas[i].Descuento" class="text-danger small"></span>
+                                                <div class="form-text ayuda-descuento"></div>
+                                                <div class="small text-danger error-descuento" aria-live="polite"></div>
+                                            </div>
+                                            <div class="col-4 col-lg-4 d-flex justify-content-end align-items-end">
+                                                <button type="button" class="btn btn-outline-danger btn-remover-linea"
+                                                        aria-label="Eliminar producto">×</button>
+                                            </div>
+                                            <div class="col-12 d-flex justify-content-between align-items-center border-top pt-2 small">
+                                                <span class="text-muted">Importe de la línea</span>
+                                                <strong class="importe-linea fs-6">₡0,00</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <button type="button" class="btn btn-outline-success" id="agregar-linea">
+                                <span aria-hidden="true">＋</span> Agregar otro producto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="col-lg-4" aria-labelledby="resumen-titulo">
+            <section class="card pedido-summary shadow-sm sticky-top" style="top: 1rem;">
+                <div class="card-body p-4">
+                    <h2 class="h5 mb-4" id="resumen-titulo">Resumen del pedido</h2>
+                    <div class="mb-3 pb-3 border-bottom">
+                        <div class="small text-muted mb-1">Cliente</div>
+                        <strong id="resumen-cliente">Sin seleccionar</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Productos</span>
+                        <span id="resumen-productos">0 artículos · 0 unidades</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal bruto</span>
+                        <span id="resumen-bruto">₡0,00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Descuento</span>
+                        <span id="resumen-descuento">− ₡0,00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal neto</span>
+                        <span id="resumen-subtotal">₡0,00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Impuestos</span>
+                        <span id="resumen-impuestos">₡0,00</span>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-baseline mb-4">
+                        <span class="fw-semibold">Total del pedido</span>
+                        <strong class="fs-4 total-pedido" id="resumen-total">₡0,00</strong>
+                    </div>
+                    <div id="estado-stock" class="alert alert-light border small mb-3" role="status">
+                        Agrega productos para validar el stock.
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg w-100">Confirmar pedido</button>
+                    <p class="text-muted small mt-3 mb-0">
+                        Al confirmar, se registrará el pedido y se actualizará el stock disponible.
+                    </p>
+                </div>
+            </section>
+        </aside>
+    </div>
+</form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const form = document.getElementById('pedido-form');
+            const contenedor = document.getElementById('lineas-pedido');
+            const buscarProducto = document.getElementById('buscar-producto');
+            const resultadosProductos = document.getElementById('resultados-productos');
+            const moneda = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' });
+
+            function parseDecimal(value) {
+                const text = String(value).trim().replace(/[\s\u00a0]/g, '');
+                if (!text) return null;
+
+                const ultimoPunto = text.lastIndexOf('.');
+                const ultimaComa = text.lastIndexOf(',');
+                let normalizado = text;
+
+                if (ultimaComa > ultimoPunto) {
+                    normalizado = text.replace(/\./g, '').replace(',', '.');
+                } else if (ultimaComa !== -1) {
+                    normalizado = text.replace(/,/g, '');
+                }
+
+                const numero = Number(normalizado);
+                return Number.isFinite(numero) ? numero : null;
+            }
+
+            if (window.jQuery && $.validator) {
+                $.validator.methods.number = function (value, element) {
+                    return this.optional(element) || parseDecimal(value) !== null;
+                };
+                $.validator.methods.min = function (value, element, minimo) {
+                    const numero = parseDecimal(value);
+                    return this.optional(element) || (numero !== null && numero >= parseDecimal(minimo));
+                };
+                $.validator.methods.max = function (value, element, maximo) {
+                    const numero = parseDecimal(value);
+                    return this.optional(element) || (numero !== null && numero <= parseDecimal(maximo));
+                };
+                $.validator.methods.range = function (value, element, limites) {
+                    const numero = parseDecimal(value);
+                    const minimo = parseDecimal(limites[0]);
+                    const maximo = parseDecimal(limites[1]);
+                    return this.optional(element) ||
+                        (numero !== null && minimo !== null && maximo !== null &&
+                            numero >= minimo && numero <= maximo);
+                };
+                $.validator.methods.step = function (value, element, paso) {
+                    const numero = parseDecimal(value);
+                    const incremento = parseDecimal(paso);
+                    if (this.optional(element)) return true;
+                    if (numero === null || incremento === null || incremento <= 0) return false;
+
+                    const minimo = parseDecimal(element.getAttribute('min')) ?? 0;
+                    const escala = 10 ** Math.max(
+                        (String(numero).split('.')[1] || '').length,
+                        (String(incremento).split('.')[1] || '').length,
+                        (String(minimo).split('.')[1] || '').length
+                    );
+                    const diferencia = Math.round((numero - minimo) * escala);
+                    const pasoEntero = Math.round(incremento * escala);
+                    return pasoEntero > 0 && diferencia % pasoEntero === 0;
+                };
+            }
+
+            const catalogo = [...contenedor.querySelector('.selector-producto').options]
+                .filter(opcion => opcion.value && opcion.value !== '0')
+                .map(opcion => ({
+                    id: opcion.value,
+                    nombre: opcion.dataset.name,
+                    codigo: opcion.dataset.code,
+                    busqueda: opcion.dataset.search.normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+                    precio: Number(opcion.dataset.price),
+                    stock: Number(opcion.dataset.stock)
+                }));
+
+            function reindexarLineas() {
+                const lineas = [...contenedor.querySelectorAll('.linea-pedido')];
+                lineas.forEach((linea, index) => {
+                    linea.dataset.index = index;
+                    linea.querySelectorAll('[name]').forEach((campo) => {
+                        campo.name = campo.name.replace(/Lineas\[\d+\]/g, `Lineas[${index}]`);
+                    });
+                    linea.querySelectorAll('[id], label[for]').forEach((elemento) => {
+                        if (elemento.id) {
+                            elemento.id = elemento.id.replace(/Lineas_\d+__/g, `Lineas_${index}__`);
+                        }
+                        if (elemento.htmlFor) {
+                            elemento.htmlFor = elemento.htmlFor.replace(/Lineas_\d+__/g, `Lineas_${index}__`);
+                        }
+                    });
+                    linea.querySelectorAll('[data-valmsg-for]').forEach((mensaje) => {
+                        mensaje.dataset.valmsgFor = mensaje.dataset.valmsgFor.replace(/Lineas\[\d+\]/g, `Lineas[${index}]`);
+                        mensaje.textContent = '';
+                        mensaje.classList.remove('field-validation-error');
+                        mensaje.classList.add('field-validation-valid');
+                    });
+                });
+
+                if (window.jQuery && $.validator && $.validator.unobtrusive) {
+                    $(form).removeData('validator').removeData('unobtrusiveValidation');
+                    $.validator.unobtrusive.parse(form);
+                }
+            }
+
+            function crearLinea() {
+                const linea = contenedor.querySelector('.linea-pedido').cloneNode(true);
+                linea.querySelector('.selector-producto').value = '0';
+                linea.querySelector('.cantidad-linea').value = '1';
+                linea.querySelector('.tipo-descuento').value = '1';
+                linea.querySelector('.descuento-linea').value = '0';
+                linea.querySelector('.input-validation-error')?.classList.remove('input-validation-error');
+                linea.querySelectorAll('[data-valmsg-for]').forEach(mensaje => {
+                    mensaje.textContent = '';
+                    mensaje.classList.remove('field-validation-error');
+                    mensaje.classList.add('field-validation-valid');
+                });
+                contenedor.appendChild(linea);
+                reindexarLineas();
+                return linea;
+            }
+
+            function agregarProducto(productoId) {
+                const lineas = [...contenedor.querySelectorAll('.linea-pedido')];
+                const existente = lineas.find(linea => linea.querySelector('.selector-producto').value === productoId);
+                if (existente) {
+                    const cantidad = existente.querySelector('.cantidad-linea');
+                    const producto = catalogo.find(item => item.id === productoId);
+                    cantidad.value = String(Math.min(Number(cantidad.value) + 1, producto.stock + 1));
+                    actualizarResumen();
+                    cantidad.focus();
+                    return;
+                }
+
+                const lineaVacia = lineas.find(linea => linea.querySelector('.selector-producto').value === '0');
+                const linea = lineaVacia || crearLinea();
+                linea.querySelector('.selector-producto').value = productoId;
+                buscarProducto.value = '';
+                actualizarResumen();
+                actualizarBusqueda();
+                linea.querySelector('.cantidad-linea').focus();
+            }
+
+            function actualizarBusqueda() {
+                const termino = buscarProducto.value.trim().toLocaleLowerCase()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                resultadosProductos.replaceChildren();
+                if (termino.length < 2) {
+                    resultadosProductos.hidden = true;
+                    document.getElementById('resultado-busqueda').textContent = '';
+                    return;
+                }
+
+                const coincidencias = catalogo
+                    .filter(producto => producto.busqueda.includes(termino))
+                    .slice(0, 10);
+                document.getElementById('resultado-busqueda').textContent = coincidencias.length === 0
+                    ? 'No se encontraron productos.'
+                    : `${coincidencias.length} coincidencia${coincidencias.length === 1 ? '' : 's'} mostrada${coincidencias.length === 1 ? '' : 's'}.`;
+                resultadosProductos.hidden = coincidencias.length === 0;
+
+                coincidencias.forEach(producto => {
+                    const boton = document.createElement('button');
+                    boton.type = 'button';
+                    boton.className = 'pedido-search-result';
+                    boton.dataset.productoId = producto.id;
+
+                    const grupo = document.createElement('span');
+                    grupo.className = 'd-flex align-items-center gap-2';
+                    const avatar = document.createElement('span');
+                    avatar.className = 'pedido-product-avatar';
+                    avatar.textContent = producto.nombre.slice(0, 1).toLocaleUpperCase();
+                    const descripcion = document.createElement('span');
+                    descripcion.className = 'd-block';
+                    const nombre = document.createElement('strong');
+                    nombre.className = 'd-block';
+                    nombre.textContent = producto.nombre;
+                    const codigo = document.createElement('span');
+                    codigo.className = 'small text-muted';
+                    codigo.textContent = `${producto.codigo} · Disponible: ${producto.stock}`;
+                    descripcion.append(nombre, codigo);
+                    grupo.append(avatar, descripcion);
+
+                    const precio = document.createElement('strong');
+                    precio.className = 'text-nowrap';
+                    precio.textContent = moneda.format(producto.precio);
+                    const agregar = document.createElement('span');
+                    agregar.className = 'text-success fw-semibold text-nowrap';
+                    agregar.textContent = '＋ Agregar';
+                    boton.append(grupo, precio, agregar);
+                    resultadosProductos.append(boton);
+                });
+            }
+
+            function actualizarOpcionesSeleccionadas() {
+                const lineas = [...contenedor.querySelectorAll('.linea-pedido')];
+                lineas.forEach((linea) => {
+                    const selector = linea.querySelector('.selector-producto');
+                    const seleccionadosEnOtrasLineas = new Set(
+                        lineas.filter(otra => otra !== linea)
+                            .map(otra => otra.querySelector('.selector-producto').value)
+                            .filter(Boolean)
+                    );
+
+                    [...selector.options].forEach((opcion) => {
+                        if (!opcion.value) return;
+                        opcion.disabled = seleccionadosEnOtrasLineas.has(opcion.value);
+                    });
+                });
+            }
+
+            function actualizarResumen() {
+                let bruto = 0;
+                let descuentos = 0;
+                let impuestos = 0;
+                let unidades = 0;
+                let productosSeleccionados = 0;
+                let stockValido = true;
+                const idsSeleccionados = [...contenedor.querySelectorAll('.selector-producto')]
+                    .map(selector => selector.value)
+                    .filter(id => id && id !== '0');
+                const hayDuplicados = new Set(idsSeleccionados).size !== idsSeleccionados.length;
+
+                contenedor.querySelectorAll('.linea-pedido').forEach((linea) => {
+                    const selector = linea.querySelector('.selector-producto');
+                    const opcion = selector.selectedOptions[0];
+                    const cantidad = Number.parseInt(linea.querySelector('.cantidad-linea').value, 10) || 0;
+                    const entradaDescuento = linea.querySelector('.descuento-linea').value.trim();
+                    const descuentoParseado = entradaDescuento ? parseDecimal(entradaDescuento) : null;
+                    const valorDescuento = descuentoParseado ?? 0;
+                    const tipoDescuento = Number.parseInt(linea.querySelector('.tipo-descuento').value, 10);
+                    const stockLabel = linea.querySelector('.stock-disponible');
+                    const importeLabel = linea.querySelector('.importe-linea');
+                    const errorDescuento = linea.querySelector('.error-descuento');
+                    linea.querySelector('.ayuda-descuento').textContent = tipoDescuento === 1
+                        ? 'Porcentaje entre 0 y 100.'
+                        : 'Monto fijo aplicado a toda la línea.';
+
+                    if (!opcion || !opcion.dataset.price) {
+                        stockLabel.textContent = '';
+                        importeLabel.textContent = moneda.format(0);
+                        linea.querySelector('.precio-unitario').textContent = moneda.format(0);
+                        linea.querySelector('.producto-letra').textContent = 'P';
+                        linea.querySelector('.producto-codigo').textContent = '';
+                        return;
+                    }
+
+                    productosSeleccionados++;
+                    const precio = Number(opcion.dataset.price);
+                    const impuestoPorc = Number(opcion.dataset.tax);
+                    const stock = Number.parseInt(opcion.dataset.stock, 10);
+                    const base = precio * cantidad;
+                    const descuentoValido = descuentoParseado !== null && valorDescuento >= 0 &&
+                        (tipoDescuento === 1 ? valorDescuento <= 100 : valorDescuento <= base);
+                    errorDescuento.textContent = !entradaDescuento
+                        ? 'Indica un descuento o escribe 0.'
+                        : descuentoParseado === null || valorDescuento < 0
+                            ? 'El descuento debe ser un número igual o mayor que 0.'
+                            : tipoDescuento === 1 && valorDescuento > 100
+                                ? 'El porcentaje no puede ser mayor que 100 %.'
+                                : tipoDescuento === 2 && valorDescuento > base
+                                    ? 'El descuento no puede superar el importe de la línea.'
+                                    : '';
+                    const descuentoAplicado = !descuentoValido
+                        ? 0
+                        : tipoDescuento === 1
+                            ? Math.round((base * valorDescuento / 100 + Number.EPSILON) * 100) / 100
+                            : valorDescuento;
+                    const subtotal = base - descuentoAplicado;
+                    const impuesto = Math.round((subtotal * impuestoPorc / 100 + Number.EPSILON) * 100) / 100;
+                    const totalLinea = subtotal + impuesto;
+                    const lineaValida = cantidad > 0 && cantidad <= stock && descuentoValido;
+
+                    bruto += base;
+                    descuentos += Math.min(base, Math.max(0, descuentoAplicado));
+                    impuestos += impuesto;
+                    unidades += cantidad;
+                    importeLabel.textContent = moneda.format(totalLinea);
+                    linea.querySelector('.precio-unitario').textContent = moneda.format(precio);
+                    linea.querySelector('.producto-letra').textContent = opcion.dataset.name.slice(0, 1).toLocaleUpperCase();
+                    linea.querySelector('.producto-codigo').textContent = `${opcion.dataset.code} · ${moneda.format(precio)}`;
+                    stockLabel.textContent = cantidad <= stock
+                        ? `Stock disponible: ${stock}`
+                        : `Stock insuficiente: disponibles ${stock}`;
+                    stockLabel.classList.toggle('text-danger', cantidad > stock);
+                    stockLabel.classList.toggle('text-muted', cantidad <= stock);
+                    stockValido = stockValido && lineaValida && !hayDuplicados;
+                });
+
+                const cliente = document.getElementById('ClienteId');
+                const clienteNombre = cliente.selectedOptions[0]?.value
+                    ? cliente.selectedOptions[0].textContent
+                    : 'Sin seleccionar';
+                document.getElementById('resumen-cliente').textContent = clienteNombre;
+                const clienteSeleccionado = document.getElementById('cliente-seleccionado');
+                clienteSeleccionado.textContent = clienteNombre === 'Sin seleccionar'
+                    ? 'Selecciona un cliente para asociarlo al pedido.'
+                    : `✓ Cliente seleccionado · ${clienteNombre}`;
+                clienteSeleccionado.classList.toggle('alert-success', clienteNombre !== 'Sin seleccionar');
+                clienteSeleccionado.classList.toggle('alert-light', clienteNombre === 'Sin seleccionar');
+                document.getElementById('resumen-productos').textContent =
+                    `${productosSeleccionados} ${productosSeleccionados === 1 ? 'artículo' : 'artículos'} · ${unidades} unidades`;
+                document.getElementById('resumen-bruto').textContent = moneda.format(bruto);
+                document.getElementById('resumen-descuento').textContent = `− ${moneda.format(descuentos)}`;
+                document.getElementById('resumen-subtotal').textContent = moneda.format(bruto - descuentos);
+                document.getElementById('resumen-impuestos').textContent = moneda.format(impuestos);
+                document.getElementById('resumen-total').textContent = moneda.format(bruto - descuentos + impuestos);
+
+                const estadoStock = document.getElementById('estado-stock');
+                estadoStock.classList.toggle('alert-success', productosSeleccionados > 0 && stockValido);
+                estadoStock.classList.toggle('alert-danger', productosSeleccionados > 0 && !stockValido);
+                estadoStock.classList.toggle('alert-light', productosSeleccionados === 0);
+                estadoStock.textContent = productosSeleccionados === 0
+                    ? 'Agrega productos para validar el stock.'
+                    : stockValido
+                        ? '✓ Stock disponible. Se verificará nuevamente al confirmar.'
+                        : hayDuplicados
+                            ? 'Un producto solo puede aparecer una vez. Ajusta la cantidad en su línea.'
+                            : 'Revisa cantidades o descuentos antes de confirmar.';
+
+                actualizarOpcionesSeleccionadas();
+            }
+
+            document.getElementById('agregar-linea').addEventListener('click', () => {
+                crearLinea();
+                actualizarResumen();
+            });
+
+            contenedor.addEventListener('click', (evento) => {
+                if (!(evento.target instanceof Element)) return;
+                const ajustar = evento.target.closest('.cantidad-ajustar');
+                if (ajustar) {
+                    const campo = ajustar.closest('.input-group').querySelector('.cantidad-linea');
+                    campo.value = String(Math.max(1, (Number.parseInt(campo.value, 10) || 1) + Number(ajustar.dataset.cambio)));
+                    actualizarResumen();
+                    return;
+                }
+                const boton = evento.target.closest('.btn-remover-linea');
+                if (!boton || contenedor.children.length <= 1) return;
+                boton.closest('.linea-pedido').remove();
+                reindexarLineas();
+                actualizarResumen();
+            });
+
+            resultadosProductos.addEventListener('click', (evento) => {
+                if (!(evento.target instanceof Element)) return;
+                const resultado = evento.target.closest('.pedido-search-result');
+                if (resultado) agregarProducto(resultado.dataset.productoId);
+            });
+
+            contenedor.addEventListener('input', actualizarResumen);
+            contenedor.addEventListener('change', actualizarResumen);
+            buscarProducto.addEventListener('input', actualizarBusqueda);
+            document.getElementById('buscar-agregar-producto').addEventListener('click', () => {
+                const primerResultado = resultadosProductos.querySelector('.pedido-search-result');
+                if (primerResultado) agregarProducto(primerResultado.dataset.productoId);
+                else buscarProducto.focus();
+            });
+            document.getElementById('ClienteId').addEventListener('change', actualizarResumen);
+            actualizarResumen();
+        })();
+    </script>
+}
