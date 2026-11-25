@@ -11,7 +11,7 @@
 
 <dl class="row col-lg-8">
     <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TipoIdentificacion)</dt>
-    <dd class="col-sm-8">@Html.DisplayFor(model => model.TipoIdentificacion)</dd>
+    <dd class="col-sm-8">@(Model.TipoIdentificacion == TipoIdentificacion.Fisica ? "Cédula física" : "Cédula jurídica")</dd>
     <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cedula)</dt>
     <dd class="col-sm-8">@Model.Cedula</dd>
     <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Nombre)</dt>

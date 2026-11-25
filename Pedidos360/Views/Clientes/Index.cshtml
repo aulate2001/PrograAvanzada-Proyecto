@@ -30,6 +30,7 @@
         <thead>
             <tr>
                 <th>Nombre</th>
+                <th>Tipo</th>
                 <th>Cédula</th>
                 <th>Correo</th>
                 <th>Teléfono</th>
@@ -40,7 +41,7 @@
             @if (Model.Clientes.Count == 0)
             {
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">No hay clientes para mostrar.</td>
+                    <td colspan="6" class="text-center text-muted py-4">No hay clientes para mostrar.</td>
                 </tr>
             }
             else
@@ -49,6 +50,7 @@
                 {
                     <tr>
                         <td class="fw-semibold">@cliente.Nombre</td>
+                        <td>@(cliente.TipoIdentificacion == TipoIdentificacion.Fisica ? "Cédula física" : "Cédula jurídica")</td>
                         <td>@cliente.Cedula</td>
                         <td>@cliente.Correo</td>
                         <td>@cliente.Telefono</td>
