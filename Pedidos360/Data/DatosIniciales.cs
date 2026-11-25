@@ -38,6 +38,7 @@ namespace Pedidos360.Data
                 await CargarCategoriasAsync(contexto);
                 await CargarProductosAsync(contexto, entorno);
                 await CargarClientesAsync(contexto);
+                await CargarOrdenesServicioAsync(contexto);
             }
             catch (Exception excepcion)
             {
@@ -134,6 +135,57 @@ namespace Pedidos360.Data
                 Crear(TipoIdentificacion.Juridica, "3102234567", "Oficentro Costa Rica S.R.L.", "ventas@oficentrocr.co.cr", "22113344", "Heredia, Ulloa, Zona Franca"));
 
             await contexto.SaveChangesAsync();
+        }
+
+        // Ordenes de ejemplo del enunciado (RF-03). Los clientes se crean si no existen.
+        private static async Task CargarOrdenesServicioAsync(ApplicationDbContext contexto)
+        {
+            if (await contexto.OrdenesServicio.AnyAsync())
+            {
+                return;
+            }
+
+            var carlos = await ObtenerOCrearClienteAsync(contexto, "111110001", "Carlos Mora", "carlos.mora@correo.com", "87001001", "San José, Curridabat");
+            var ana = await ObtenerOCrearClienteAsync(contexto, "111110002", "Ana Vargas", "ana.vargas@correo.com", "87001002", "Heredia, San Pablo");
+            var luis = await ObtenerOCrearClienteAsync(contexto, "111110003", "Luis Castro", "luis.castro@correo.com", "87001003", "Alajuela, Centro");
+            var maria = await ObtenerOCrearClienteAsync(contexto, "111110004", "María Solís", "maria.solis2@correo.com", "87001004", "Cartago, Tres Ríos");
+
+            var hoy = DateTime.Now;
+            contexto.OrdenesServicio.AddRange(
+                CrearOrden(carlos, 2, "Laptop HP", "No enciende, posible falla en la tarjeta madre.", 25000m, EstadoOrden.Pendiente, hoy.AddDays(-1)),
+                CrearOrden(ana, 2, "iPhone 13", "Pantalla quebrada.", 45000m, EstadoOrden.EnReparacion, hoy.AddDays(-3)),
+                CrearOrden(luis, 3, "PC Gamer", "Limpieza interna y cambio de pasta térmica.", 15000m, EstadoOrden.Listo, hoy.AddDays(-5)),
+                CrearOrden(maria, 4, "MacBook Air", "Reinstalar sistema operativo.", 35000m, EstadoOrden.Entregado, hoy.AddDays(-7), hoy.AddDays(-2)));
+
+            await contexto.SaveChangesAsync();
+        }
+
+        private static async Task<Cliente> ObtenerOCrearClienteAsync(ApplicationDbContext contexto, string cedula, string nombre, string correo, string telefono, string direccion)
+        {
+            var cliente = await contexto.Clientes.FirstOrDefaultAsync(c => c.Cedula == cedula);
+            if (cliente is null)
+            {
+                cliente = Crear(TipoIdentificacion.Fisica, cedula, nombre, correo, telefono, direccion);
+                contexto.Clientes.Add(cliente);
+                await contexto.SaveChangesAsync();
+            }
+
+            return cliente;
+        }
+
+        private static OrdenServicio CrearOrden(Cliente cliente, int tipoServicioId, string equipo, string descripcion, decimal costo, EstadoOrden estado, DateTime ingreso, DateTime? entrega = null)
+        {
+            return new OrdenServicio
+            {
+                ClienteId = cliente.Id,
+                TipoServicioId = tipoServicioId,
+                Equipo = equipo,
+                DescripcionProblema = descripcion,
+                CostoEstimado = costo,
+                Estado = estado,
+                FechaIngreso = ingreso,
+                FechaEntrega = entrega
+            };
         }
 
         private static Cliente Crear(TipoIdentificacion tipo, string cedula, string nombre, string correo, string telefono, string direccion)

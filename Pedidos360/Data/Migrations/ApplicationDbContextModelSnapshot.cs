@@ -304,6 +304,59 @@ namespace Pedidos360.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Pedidos360.Models.OrdenServicio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("CostoEstimado")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("DescripcionProblema")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Equipo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FechaEntrega")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaIngreso")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TipoServicioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
+
+                    b.HasIndex("Estado");
+
+                    b.HasIndex("TipoServicioId");
+
+                    b.ToTable("OrdenesServicio", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_OrdenesServicio_CostoEstimado", "[CostoEstimado] > 0");
+
+                            t.HasCheckConstraint("CK_OrdenesServicio_Estado", "[Estado] IN (1, 2, 3, 4)");
+                        });
+                });
+
             modelBuilder.Entity("Pedidos360.Models.Pedido", b =>
                 {
                     b.Property<int>("Id")
@@ -478,6 +531,49 @@ namespace Pedidos360.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Pedidos360.Models.TipoServicio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.ToTable("TiposServicio", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Nombre = "Diagnóstico"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Nombre = "Reparación de hardware"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Nombre = "Mantenimiento preventivo"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Nombre = "Instalación de software"
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -527,6 +623,25 @@ namespace Pedidos360.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Pedidos360.Models.OrdenServicio", b =>
+                {
+                    b.HasOne("Pedidos360.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Pedidos360.Models.TipoServicio", "TipoServicio")
+                        .WithMany()
+                        .HasForeignKey("TipoServicioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+
+                    b.Navigation("TipoServicio");
                 });
 
             modelBuilder.Entity("Pedidos360.Models.Pedido", b =>

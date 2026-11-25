@@ -17,6 +17,8 @@ namespace Pedidos360.Data
         public DbSet<Cliente> Clientes => Set<Cliente>();
         public DbSet<Pedido> Pedidos => Set<Pedido>();
         public DbSet<PedidoDetalle> PedidoDetalles => Set<PedidoDetalle>();
+        public DbSet<TipoServicio> TiposServicio => Set<TipoServicio>();
+        public DbSet<OrdenServicio> OrdenesServicio => Set<OrdenServicio>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +31,50 @@ namespace Pedidos360.Data
             ConfigurarClientes(modelBuilder);
             ConfigurarPedidos(modelBuilder);
             ConfigurarPedidoDetalles(modelBuilder);
+            ConfigurarTiposServicio(modelBuilder);
+            ConfigurarOrdenesServicio(modelBuilder);
+        }
+
+        // Tipos de servicio cargados como datos iniciales de EF (no tienen CRUD).
+        private static void ConfigurarTiposServicio(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TipoServicio>(entity =>
+            {
+                entity.ToTable("TiposServicio");
+                entity.HasIndex(t => t.Nombre).IsUnique();
+
+                entity.HasData(
+                    new TipoServicio { Id = 1, Nombre = "Diagnóstico" },
+                    new TipoServicio { Id = 2, Nombre = "Reparación de hardware" },
+                    new TipoServicio { Id = 3, Nombre = "Mantenimiento preventivo" },
+                    new TipoServicio { Id = 4, Nombre = "Instalación de software" });
+            });
+        }
+
+        private static void ConfigurarOrdenesServicio(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<OrdenServicio>(entity =>
+            {
+                entity.ToTable("OrdenesServicio", t =>
+                {
+                    t.HasCheckConstraint("CK_OrdenesServicio_Estado", "[Estado] IN (1, 2, 3, 4)");
+                    t.HasCheckConstraint("CK_OrdenesServicio_CostoEstimado", "[CostoEstimado] > 0");
+                });
+
+                entity.Property(o => o.CostoEstimado).HasPrecision(18, 2);
+                entity.HasIndex(o => o.Estado);
+
+                // No se puede borrar un cliente ni un tipo de servicio que tengan ordenes.
+                entity.HasOne(o => o.Cliente)
+                      .WithMany()
+                      .HasForeignKey(o => o.ClienteId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(o => o.TipoServicio)
+                      .WithMany()
+                      .HasForeignKey(o => o.TipoServicioId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
         }
 
         // Nombres en espanol para las tablas de Identity, igual que en Database/01_Crear_Pedidos360.sql.
