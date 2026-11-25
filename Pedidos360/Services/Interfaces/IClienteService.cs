@@ -10,7 +10,7 @@ namespace Pedidos360.Services.Interfaces
         Task<bool> ExisteCedulaAsync(string cedula, int? idExcluir = null);
         Task<bool> CrearAsync(Cliente cliente);
         Task<bool> ActualizarAsync(Cliente cliente);
-        Task<bool> TienePedidosAsync(int id);
-        Task<bool> EliminarSiNoTienePedidosAsync(int id);
+        Task<bool> TieneOrdenesAsociadasAsync(int id);
+        Task<bool> EliminarSiNoTieneOrdenesAsync(int id);
     }
 }

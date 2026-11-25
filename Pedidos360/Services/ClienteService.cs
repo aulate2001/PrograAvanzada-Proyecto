@@ -111,15 +111,18 @@ namespace Pedidos360.Services
             }
         }
 
-        public Task<bool> TienePedidosAsync(int id)
+        // RF-01: un cliente no se puede eliminar si tiene ordenes asociadas.
+        // Hoy las ordenes del sistema son los pedidos. Cuando se agreguen las ordenes de servicio (RF-02),
+        // basta con sumar aqui la consulta a esa tabla para que la regla las cubra tambien.
+        public Task<bool> TieneOrdenesAsociadasAsync(int id)
         {
             return _context.Set<Pedido>().AsNoTracking().AnyAsync(pedido => pedido.ClienteId == id);
         }
 
-        public async Task<bool> EliminarSiNoTienePedidosAsync(int id)
+        public async Task<bool> EliminarSiNoTieneOrdenesAsync(int id)
         {
             var cliente = await _context.Set<Cliente>().FirstOrDefaultAsync(actual => actual.Id == id);
-            if (cliente is null || await TienePedidosAsync(id))
+            if (cliente is null || await TieneOrdenesAsociadasAsync(id))
             {
                 return false;
             }

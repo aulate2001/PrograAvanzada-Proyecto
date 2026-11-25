@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pedidos360.Models;
 using Pedidos360.Services.Interfaces;
@@ -9,10 +9,12 @@ namespace Pedidos360.Controllers
     public class ClientesController : Controller
     {
         private readonly IClienteService _clienteService;
+        private readonly ILogger<ClientesController> _logger;
 
-        public ClientesController(IClienteService clienteService)
+        public ClientesController(IClienteService clienteService, ILogger<ClientesController> logger)
         {
             _clienteService = clienteService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(string? busqueda, int pagina = 1)
@@ -48,9 +50,18 @@ namespace Pedidos360.Controllers
                 return View(cliente);
             }
 
-            if (!await _clienteService.CrearAsync(cliente))
+            try
             {
-                ModelState.AddModelError(nameof(cliente.Cedula), "Ya existe un cliente con esta cédula.");
+                if (!await _clienteService.CrearAsync(cliente))
+                {
+                    ModelState.AddModelError(nameof(cliente.Cedula), "Ya existe un cliente con esta cédula.");
+                    return View(cliente);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al registrar el cliente con cédula {Cedula}.", cliente.Cedula);
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar el cliente. Intente de nuevo.");
                 return View(cliente);
             }
 
@@ -86,9 +97,18 @@ namespace Pedidos360.Controllers
                 return View(cliente);
             }
 
-            if (!await _clienteService.ActualizarAsync(cliente))
+            try
             {
-                ModelState.AddModelError(nameof(cliente.Cedula), "Ya existe un cliente con esta cédula.");
+                if (!await _clienteService.ActualizarAsync(cliente))
+                {
+                    ModelState.AddModelError(nameof(cliente.Cedula), "Ya existe un cliente con esta cédula.");
+                    return View(cliente);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar el cliente {ClienteId}.", cliente.Id);
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al actualizar el cliente. Intente de nuevo.");
                 return View(cliente);
             }
 
@@ -104,7 +124,7 @@ namespace Pedidos360.Controllers
                 return NotFound();
             }
 
-            ViewBag.TienePedidos = await _clienteService.TienePedidosAsync(id);
+            ViewBag.TieneOrdenes = await _clienteService.TieneOrdenesAsociadasAsync(id);
             return View(cliente);
         }
 
@@ -112,9 +132,18 @@ namespace Pedidos360.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (!await _clienteService.EliminarSiNoTienePedidosAsync(id))
+            try
             {
-                TempData["Error"] = "No se puede eliminar el cliente porque tiene pedidos asociados o ya no existe.";
+                if (!await _clienteService.EliminarSiNoTieneOrdenesAsync(id))
+                {
+                    TempData["Error"] = "No se puede eliminar el cliente porque tiene órdenes asociadas o ya no existe.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar el cliente {ClienteId}.", id);
+                TempData["Error"] = "Ocurrió un error al eliminar el cliente. Intente de nuevo.";
                 return RedirectToAction(nameof(Index));
             }
 

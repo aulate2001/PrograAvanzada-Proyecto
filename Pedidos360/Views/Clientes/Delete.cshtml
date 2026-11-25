@@ -1,7 +1,7 @@
 ﻿@model Cliente
 @{
     ViewData["Title"] = "Eliminar cliente";
-    var tienePedidos = (bool)ViewBag.TienePedidos;
+    var tieneOrdenes = (bool)ViewBag.TieneOrdenes;
 }
 
 <div class="mb-4">
@@ -9,10 +9,10 @@
     <h1 class="h2 mt-2 mb-1">Eliminar cliente</h1>
 </div>
 
-@if (tienePedidos)
+@if (tieneOrdenes)
 {
     <div class="alert alert-warning" role="alert">
-        Este cliente tiene pedidos asociados y no se puede eliminar.
+        Este cliente tiene órdenes asociadas y no se puede eliminar.
     </div>
 }
 else
@@ -30,7 +30,7 @@ else
 </dl>
 
 <div class="d-flex gap-2 mt-3">
-    @if (!tienePedidos)
+    @if (!tieneOrdenes)
     {
         <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
             <button type="submit" class="btn btn-danger">Eliminar cliente</button>
